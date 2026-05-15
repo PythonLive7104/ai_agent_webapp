@@ -27,6 +27,7 @@ warnings.filterwarnings(
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 from langchain.agents import create_agent
+from langgraph.checkpoint.sqlite import SqliteSaver # for saving the agent's memory to a SQLite database
 from langgraph.checkpoint.postgres import PostgresSaver # for saving the agent's memory to a PostgreSQL database
 
 load_dotenv()
@@ -74,42 +75,13 @@ You are a helpful weather assistant. YOUR WORKFLOW:
 5. Give temperature in Fahrenheit for locations in North America and South America.
 """
 
+connection = SqliteSaver.from_conn_string('checkpoint.db')
+checkpointer = connection.__enter__()
 
-with PostgresSaver.from_conn_string(DB_URL) as checkpointer:
-    checkpointer.setup()
-    agent = create_agent(
-        model=llm,
-        tools=[get_weather_info, get_location],    
-        system_prompt=system_prompt,
-        checkpointer=checkpointer
-    )
+agent = create_agent(
+    model=llm,
+    tools=[get_weather_info, get_location],    
+    system_prompt=system_prompt,
+    checkpointer=checkpointer
+)
 
-
-    while True:
-        query = input("Ask weather: ")
-        if query.lower() in ["exit", "quit"]:
-            print("Goodbye!")
-            break
-        
-        response = agent.invoke(
-        {
-            "messages": [
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": query
-                }
-            ]
-        },
-        config={
-                "configurable": {
-                    "thread_id": "user_1"
-                }
-            }
-        )
-        print(response["messages"][-1].content)
-
-        
