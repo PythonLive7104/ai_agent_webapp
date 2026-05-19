@@ -3,7 +3,12 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
+'''
+The project involves using LLM models locally, specifically using the Ollama platform to run the gpt-4.1-mini model.
+The locally downloaded model is tinyllama, which is a smaller version of the GPT-4 model. The project also involves building an API using Flask and Langchain to interact with the model.
 
+The flask API will have a single endpoint /chat, which will accept POST requests with a JSON payload containing the conversation history. The API will use the Langchain library to invoke the model and generate a response based on the conversation history. The response will be returned as a JSON object containing the assistant's message.
+'''
 
 model = init_chat_model(
     model="tinyllama",
